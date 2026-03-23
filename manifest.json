@@ -1,0 +1,17 @@
+{
+    "name": "نور الإسلام",
+    "short_name": "نور الإسلام",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a1628",
+    "theme_color": "#0a1628",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "icon.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg",
+            "purpose": "any maskable"
+        }
+    ]
+}
