@@ -1,0 +1,16 @@
+{
+    "name": "نور الرحمن - تطبيق المسلم الشامل",
+    "short_name": "نور الرحمن",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#0a1628",
+    "theme_color": "#1e3c72",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "icon.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
