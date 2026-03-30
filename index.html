@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نور الإسلام - تطبيق المسلم الشامل</title>
+    <!-- PWA Config -->
+    <meta name="theme-color" content="#0a1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Islamic_Star.PNG/600px-Islamic_Star.PNG">
+    
+    <!-- التعديل الأهم: رابط المانيفست النظيف -->
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a1628;
+            --bg-secondary: #0f2137;
+            --bg-card: #132744;
+            --accent-gold: #d4a853;
+            --accent-gold-light: #e8c77b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #1e3a5f;
+            --accent-green: #10b981;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            overscroll-behavior: none;
+        }
+
+        .font-amiri { font-family: 'Amiri', serif; }
+
+        /* Modern Background */
+        .animated-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; overflow: hidden; pointer-events: none;
+        }
+        .geometric-pattern {
+            position: absolute; width: 100%; height: 100%;
+            background: radial-gradient(circle at 20% 80%, rgba(212, 168, 83, 0.08) 0%, transparent 50%),
+                       radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+        }
+        .floating-shape {
+            position: absolute; border: 1px solid rgba(212, 168, 83, 0.15); border-radius: 50%;
+            animation: float 20s ease-in-out infinite;
+        }
+        .floating-shape:nth-child(1) { width: 300px; height: 300px; top: 10%; left: -5%; }
+        .floating-shape:nth-child(2) { width: 200px; height: 200px; top: 60%; right: -3%; animation-delay: -5s; }
+        .floating-shape:nth-child(3) { width: 150px; height: 150px; bottom: 20%; left: 20%; animation-delay: -10s; }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-30px) rotate(180deg); } }
+
+        .star { position: absolute; width: 2px; height: 2px; background: var(--accent-gold); border-radius: 50%; animation: twinkle 3s ease-in-out infinite; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.5); } }
+
+        .app-container { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; min-height: 100vh; }
+        .app-header {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+            padding: 1.5rem; border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);
+        }
+
+        .section-card {
+            background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color); border-radius: 20px; padding: 1.25rem; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;
+        }
+        .section-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light));
+            transform: scaleX(0); transition: transform 0.4s ease;
+        }
+        .section-card:hover::before { transform: scaleX(1); }
+        .section-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); border-color: var(--accent-gold); }
+
+        .icon-container { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease; }
+        .section-card:hover .icon-container { transform: scale(1.1) rotate(5deg); }
+
+        .prayer-card { background: linear-gradient(135deg, #1a365d 0%, var(--bg-card) 100%); border-radius: 24px; padding: 1.5rem; position: relative; overflow: hidden; border: 1px solid var(--border-color); }
+        .prayer-time-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .prayer-time-item.active { color: var(--accent-gold); }
+        .prayer-time-item.active .prayer-dot { background: var(--accent-gold); box-shadow: 0 0 10px var(--accent-gold); }
+        .prayer-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary); }
+
+        .counter-ring { width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(var(--accent-gold) var(--progress, 0%), var(--bg-card) 0%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(212, 168, 83, 0.1); }
+        .counter-ring-inner { width: 180px; height: 180px; border-radius: 50%; background: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
+            background: linear-gradient(to top, var(--bg-primary) 0%, rgba(10, 22, 40, 0.95) 100%);
+            backdrop-filter: blur(20px); padding: 0.75rem 1rem 1.5rem; border-top: 1px solid var(--border-color); z-index: 100;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; padding: 0.5rem; border-radius: 12px; transition: all 0.3s ease; cursor: pointer; }
+        .nav-item.active { color: var(--accent-gold); background: rgba(212, 168, 83, 0.1); }
+
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .stagger-item { opacity: 0; transform: translateY(20px); animation: staggerIn 0.5s ease forwards; }
+        @keyframes staggerIn { to { opacity: 1; transform: translateY(0); } }
+
+        .content-card { background: var(--bg-card); border-radius: 20px; padding: 1.5rem; border: 1px solid var(--border-color); margin-bottom: 1rem; }
+        .progress-bar { height: 6px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light)); border-radius: 3px; transition: width 0.3s ease; }
+
+        .surah-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.3s ease; }
+        .surah-item:hover { border-color: var(--accent-gold); transform: translateX(-4px); }
+        .surah-number { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--bg-primary); flex-shrink: 0; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); z-index: 200; display: none; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(5px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--bg-card); border-radius: 24px; max-width: 400px; width: 100%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); }
+
+        .btn-primary { background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 100%); color: var(--bg-primary); font-weight: 600; padding: 0.875rem 2rem; border-radius: 14px; border: none; cursor: pointer; }
+        .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.75rem 1.5rem; border-radius: 12px; cursor: pointer; }
+
+        .verse-container { background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%); border-radius: 20px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--border-color); }
+        .verse-number { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 100%); color: var(--bg-primary); border-radius: 50%; font-size: 0.875rem; font-weight: 700; margin-left: 0.5rem; }
+        .bismillah { text-align: center; font-size: 1.75rem; color: var(--accent-gold); padding: 1.5rem; margin-bottom: 1rem; }
+        .verse-text { font-family: 'Amiri', serif; font-size: 1.5rem; line-height: 2.5; text-align: justify; }
+
+        .loading-spinner { display: flex; align-items: center; justify-content: center; padding: 3rem; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .time-display { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .time-period { font-size: 0.875rem; color: var(--accent-gold); font-weight: 600; }
+
+        .name-card { background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-secondary) 100%); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.4s; }
+        .name-card:hover { transform: translateY(-4px); border-color: var(--accent-gold); }
+        .name-text { font-family: 'Amiri', serif; font-size: 1.5rem; color: var(--accent-gold); }
+
+        .mini-player { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: calc(100% - 2rem); max-width: 460px; background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%); border: 2px solid var(--accent-gold); border-radius: 20px; padding: 1rem; z-index: 150; display: none; box-shadow: 0 10px 40px rgba(212, 168, 83, 0.3); }
+        .mini-player.active { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+        .story-card { background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-secondary) 100%); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.5rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s ease; }
+        .story-card:hover { transform: translateY(-4px); border-color: var(--accent-gold); }
+        .story-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .story-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+
+        .tajweed-tab { flex: 1; padding: 0.75rem; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-align: center; border: none; }
+        .tajweed-tab.active { background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 100%); color: var(--bg-primary); }
+        .tajweed-tab:not(.active) { background: var(--bg-card); border: 1px solid var(--border-color); }
+
+        /* Dhikr Item */
+        .dhikr-item { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid transparent; transition: all 0.2s; cursor: pointer; }
+        .dhikr-item:hover { background: rgba(0,0,0,0.3); }
+        .dhikr-item.active { border-color: var(--accent-gold); background: rgba(245, 158, 11, 0.1); }
+
+        /* Install Banner */
+        .install-banner { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: calc(100% - 2rem); max-width: 460px; background: linear-gradient(135deg, #059669, #10b981); border-radius: 20px; padding: 1rem; z-index: 180; display: none; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .install-banner.active { display: block; animation: slideUp 0.5s ease; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-gold); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="animated-bg">
+        <div class="geometric-pattern"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div id="stars-container"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Home Page -->
+        <div id="home-page" class="page active">
+            <header class="app-header">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm text-[var(--text-secondary)]">السلام عليكم ورحمة الله</p>
+                        <h1 class="text-xl font-bold text-[var(--accent-gold)]">نور الإسلام</h1>
+                    </div>
+                </div>
+                <div class="bg-[var(--bg-card)] rounded-2xl p-4 border border-[var(--border-color)]">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[var(--accent-gold)] font-bold text-lg" id="hijri-date">جاري التحميل...</p>
+                            <p class="text-[var(--text-secondary)] text-sm" id="gregorian-date">جاري التحميل...</p>
+                        </div>
+                        <div class="text-left">
+                            <p class="time-display" id="current-time">--:--</p>
+                            <p class="time-period" id="time-period">--</p>
+                            <p class="text-[var(--text-secondary)] text-sm" id="current-day">----</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="p-4 pb-32">
+                <div class="mb-6 stagger-item" style="animation-delay: 0.1s;">
+                    <div class="prayer-card">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <p class="text-[var(--text-secondary)] text-sm">الصلاة القادمة</p>
+                                <h2 class="text-2xl font-bold text-[var(--accent-gold)]" id="next-prayer-name">--</h2>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-3xl font-bold" id="next-prayer-time">--:--</p>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="prayer-progress" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6 stagger-item" style="animation-delay: 0.2s;">
+                    <h3 class="text-lg font-bold mb-3">الأذكار السريعة</h3>
+                    <div class="flex gap-3 overflow-x-auto pb-2">
+                        <button class="quick-tasbeeh flex-shrink-0 bg-gradient-to-br from-[var(--accent-gold)] to-[var(--accent-gold-light)] text-[var(--bg-primary)] px-4 py-3 rounded-2xl font-semibold" onclick="openQuickTasbeeh('سبحان الله', 33)">سبحان الله</button>
+                        <button class="quick-tasbeeh flex-shrink-0 bg-[var(--bg-card)] border border-[var(--border-color)] px-4 py-3 rounded-2xl font-semibold" onclick="openQuickTasbeeh('الحمد لله', 33)">الحمد لله</button>
+                        <button class="quick-tasbeeh flex-shrink-0 bg-[var(--bg-card)] border border-[var(--border-color)] px-4 py-3 rounded-2xl font-semibold" onclick="openQuickTasbeeh('الله أكبر', 34)">الله أكبر</button>
+                        <button class="quick-tasbeeh flex-shrink-0 bg-[var(--bg-card)] border border-[var(--border-color)] px-4 py-3 rounded-2xl font-semibold" onclick="openQuickTasbeeh('لا إله إلا الله', 100)">لا إله إلا الله</button>
+                    </div>
+                </div>
+
+                <div class="mb-6 stagger-item" style="animation-delay: 0.3s;">
+                    <h3 class="text-lg font-bold mb-3">الأقسام الرئيسية</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="section-card" data-section="quran">
+                            <div class="icon-container bg-gradient-to-br from-[#10b981] to-[#059669] mb-3"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
+                            <h4 class="font-bold mb-1">القرآن الكريم</h4>
+                            <p class="text-[var(--text-secondary)] text-xs">114 سورة كاملة</p>
+                        </div>
+                        
+                        <!-- NEW: Audio Tajweed Section -->
+                        <div class="section-card" data-section="tajweed-audio">
+                            <div class="icon-container bg-gradient-to-br from-[#f59e0b] to-[#d97706] mb-3">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                            </div>
+                            <h4 class="font-bold mb-1">تجويد صوتي</h4>
+                            <p class="text-[var(--text-secondary)] text-xs">تعليم بقراء مجودين</p>
+                        </div>
+
+                        <div class="section-card" data-section="recitations">
+                            <div class="icon-container bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] mb-3"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg></div>
+                            <h4 class="font-bold mb-1">التلاوات</h4>
+                            <p class="text-[var(--text-secondary)] text-xs">استماع وتحميل</p>
+                        </div>
+                        <div class="section-card" data-section="tajweed">
+                            <div class="icon-container bg-gradient-to-br from-[#ec4899] to-[#db2777] mb-3"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg></div>
+                            <h4 class="font-bold mb-1">أحكام التجويد</h4>
+                            <p class="text-[var(--text-secondary)] text-xs">نظري وعملي</p>
+                        </div>
+                        <div class="section-card" data-section="azkar">
+                            <div class="icon-container bg-gradient-to-br from-[#f43f5e] to-[#e11d48] mb-3"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg></div>
+                            <h4 class="font-bold mb-1">الأذكار والأدعية</h4>
+                            <p class="text-[var(--text-secondary)] text-xs">أدعية لكل المناسبات</p>
+                        </div>
+                        <div class="section-card" data-section="prophets">
+                            <div class="icon-container bg-gradient-to-br from-[#06b6d4] to-[#0891b2] mb-3"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                            <h4 class="font-bold mb-1">قصص الأنبياء</h4>
+                            <p class="text-[var(--text-secondary)] text-xs">مفصلة ومفسرة</p>
+                        </div>
+                        <div class="section-card" data-section="prayer">
+                            <div class="icon-container bg-gradient-to-br from-[var(--accent-gold)] to-[var(--accent-gold-light)] mb-3"><svg class="w-6 h-6 text-[var(--bg-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                            <h4 class="font-bold mb-1">مواقيت الصلاة</h4>
+                            <p class="text-[var(--text-secondary)] text-xs">حسب موقعك</p>
+                        </div>
+                        <div class="section-card" data-section="counter">
+                            <div class="icon-container bg-gradient-to-br from-[#84cc16] to-[#65a30d] mb-3"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+                            <h4 class="font-bold mb-1">السبحة</h4>
+                            <p class="text-[var(--text-secondary)] text-xs">عداد ذكي</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- NEW: Audio Tajweed Teaching Page -->
+        <div id="tajweed-audio-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3 mb-4">
+                    <button class="back-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold">تعليم التجويد الصوتي</h1>
+                        <p class="text-xs text-[var(--text-secondary)]">استمع وتعلم القراءة الصحيحة</p>
+                    </div>
+                </div>
+            </header>
+            <main class="p-4 pb-32">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-[var(--text-secondary)] mb-2">اختر الشيخ المعلم</label>
+                    <select id="tajweed-teacher-select" class="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 focus:border-[var(--accent-gold)] focus:outline-none appearance-none cursor-pointer">
+                        <option value="">-- اختر الشيخ --</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-[var(--text-secondary)] mb-2">اختر السورة (114 سورة)</label>
+                    <select id="surah-select-tajweed" class="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 focus:border-[var(--accent-gold)] focus:outline-none appearance-none cursor-pointer">
+                        <option value="">-- اختر السورة --</option>
+                    </select>
+                </div>
+                <div class="bg-[var(--bg-card)] rounded-2xl p-6 border border-[var(--border-color)]">
+                    <div class="text-center">
+                        <div class="w-20 h-20 mx-auto bg-gradient-to-br from-[#f59e0b] to-[#d97706] rounded-full flex items-center justify-center mb-4">
+                            <svg id="tajweed-player-icon" class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                        <h3 id="tajweed-player-reciter" class="text-lg font-bold">اختر الشيخ والسورة</h3>
+                        <p id="tajweed-player-surah" class="text-[var(--accent-gold)] font-semibold mt-1">لبدء التعلم</p>
+                    </div>
+                    <div id="tajweed-audio-controls" class="hidden mt-6">
+                        <div class="flex justify-center items-center gap-6 mb-4">
+                            <button id="tajweed-rewind" class="w-10 h-10 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4z"/></svg>
+                            </button>
+                            <button id="tajweed-play-pause" class="w-14 h-14 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#d97706] flex items-center justify-center shadow-lg">
+                                <svg id="tajweed-play-icon" class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                <svg id="tajweed-pause-icon" class="w-7 h-7 text-white hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+                            </button>
+                            <button id="tajweed-forward" class="w-10 h-10 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4z"/></svg>
+                            </button>
+                        </div>
+                        <div class="w-full bg-[var(--bg-secondary)] rounded-full h-2 mb-2">
+                            <div id="tajweed-progress-bar" class="bg-gradient-to-r from-[#f59e0b] to-[#d97706] h-2 rounded-full" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <audio id="tajweed-audio-player" preload="metadata"></audio>
+            </main>
+        </div>
+
+        <!-- Recitations Page -->
+        <div id="recitations-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3 mb-4">
+                    <button class="back-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <h1 class="text-xl font-bold">التلاوات القرآنية</h1>
+                </div>
+            </header>
+            <main class="p-4 pb-32">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-[var(--text-secondary)] mb-2">اختر القارئ</label>
+                    <select id="reciter-select" class="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 focus:border-[var(--accent-gold)] focus:outline-none appearance-none cursor-pointer">
+                        <option value="">-- اختر القارئ --</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-[var(--text-secondary)] mb-2">اختر السورة</label>
+                    <select id="surah-select-recitation" class="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 focus:border-[var(--accent-gold)] focus:outline-none appearance-none cursor-pointer">
+                        <option value="">-- اختر السورة --</option>
+                    </select>
+                </div>
+                <div class="bg-[var(--bg-card)] rounded-2xl p-6 border border-[var(--border-color)]">
+                    <div class="text-center">
+                        <div class="w-20 h-20 mx-auto bg-gradient-to-br from-[var(--accent-gold)] to-[var(--accent-gold-light)] rounded-full flex items-center justify-center mb-4">
+                            <svg id="player-icon" class="w-8 h-8 text-[var(--bg-primary)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                        <h3 id="player-reciter-name" class="text-lg font-bold">اختر القارئ والسورة</h3>
+                        <p id="player-surah-name" class="text-[var(--accent-gold)] font-semibold mt-1">لبدء الاستماع</p>
+                    </div>
+                    <div id="audio-controls" class="hidden">
+                        <div class="flex justify-center items-center gap-6 mb-4">
+                            <button id="rewind-btn" class="w-10 h-10 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4z"/></svg>
+                            </button>
+                            <button id="play-pause-btn" class="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--accent-gold)] to-[var(--accent-gold-light)] flex items-center justify-center shadow-lg">
+                                <svg id="play-icon-main" class="w-7 h-7 text-[var(--bg-primary)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                <svg id="pause-icon-main" class="w-7 h-7 text-[var(--bg-primary)] hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+                            </button>
+                            <button id="forward-btn" class="w-10 h-10 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4z"/></svg>
+                            </button>
+                        </div>
+                        <div class="w-full bg-[var(--bg-secondary)] rounded-full h-2 mb-2">
+                            <div id="progress-bar" class="bg-gradient-to-r from-[var(--accent-gold)] to-[var(--accent-gold-light)] h-2 rounded-full" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <audio id="quran-audio-recitation" preload="metadata"></audio>
+            </main>
+        </div>
+
+        <!-- Tajweed Rules Page -->
+        <div id="tajweed-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3 mb-4">
+                    <button class="back-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <h1 class="text-xl font-bold">أحكام التجويد</h1>
+                </div>
+            </header>
+            <main class="p-4 pb-32" id="tajweed-content"></main>
+        </div>
+
+        <!-- Counter Page -->
+        <div id="counter-page" class="page">
+            <header class="app-header flex items-center gap-3">
+                <button class="back-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center" onclick="showPage('home-page')">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+                <h1 class="text-xl font-bold">السبحة الإلكترونية</h1>
+            </header>
+            <div class="flex flex-col items-center justify-center p-4 min-h-[70vh]">
+                <div class="mb-6 w-full max-w-sm">
+                    <label class="block text-xs text-[var(--text-secondary)] mb-2 text-center">اختر الذكر:</label>
+                    <div id="dhikr-list" class="max-h-48 overflow-y-auto pr-2"></div>
+                </div>
+                <div class="counter-ring mb-6" id="counter-ring">
+                    <div class="counter-ring-inner">
+                        <p class="text-4xl font-bold" id="counter-value">0</p>
+                        <p class="text-[var(--text-secondary)] text-sm" id="tasbeeh-text">سبحان الله</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 mb-6 bg-[var(--bg-secondary)] rounded-full px-4 py-2">
+                    <button onclick="adjustTarget(-1)" class="text-2xl font-bold text-[var(--accent-gold)] w-10 h-10 flex items-center justify-center">-</button>
+                    <input type="number" id="target-input" value="33" class="w-16 bg-transparent text-center text-xl font-bold focus:outline-none" onchange="updateTargetUI()">
+                    <button onclick="adjustTarget(1)" class="text-2xl font-bold text-[var(--accent-gold)] w-10 h-10 flex items-center justify-center">+</button>
+                </div>
+                <p class="text-[var(--text-secondary)] mb-4">الهدف: <span id="target-count">33</span></p>
+                <div class="flex gap-4">
+                    <button onclick="resetCounter()" class="btn-secondary flex-1">إعادة</button>
+                    <button id="counter-btn" class="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--accent-gold)] to-[var(--accent-gold-light)] text-[var(--bg-primary)] text-2xl font-bold active:scale-95 transition-transform shadow-lg">اضغط</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Azkar Page -->
+        <div id="azkar-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3 mb-4">
+                    <button class="back-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <h1 class="text-xl font-bold">الأذكار والأدعية</h1>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button class="tajweed-tab active" data-tab="morning">الصباح</button>
+                    <button class="tajweed-tab" data-tab="evening">المساء</button>
+                    <button class="tajweed-tab" data-tab="sleep">النوم</button>
+                    <button class="tajweed-tab" data-tab="daily">يومية</button>
+                    <button class="tajweed-tab" data-tab="occasions">مناسبات</button>
+                </div>
+            </header>
+            <main class="p-4 pb-32"><div id="azkar-content"></div></main>
+        </div>
+
+        <!-- Prophets Page -->
+        <div id="prophets-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3 mb-4">
+                    <button class="back-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold">قصص الأنبياء</h1>
+                        <p class="text-sm text-[var(--text-secondary)]">مفصلة ومفسرة بالدروس</p>
+                    </div>
+                </div>
+            </header>
+            <main class="p-4 pb-32"><div id="prophets-list"></div></main>
+        </div>
+        <div id="prophet-detail-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3">
+                    <button class="back-to-prophets-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <h1 class="text-xl font-bold" id="prophet-detail-name">اسم النبي</h1>
+                </div>
+            </header>
+            <main class="p-4 pb-32" id="prophet-detail-content"></main>
+        </div>
+
+        <!-- Other Pages (Prayer, Quran, Names) -->
+        <div id="prayer-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3">
+                    <button class="back-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <h1 class="text-xl font-bold">مواقيت الصلاة</h1>
+                </div>
+            </header>
+            <main class="p-4 pb-32">
+                <div class="text-center mb-4">
+                    <p class="text-[var(--text-secondary)]">موقعك الحالي</p>
+                    <h2 class="text-lg font-bold text-[var(--accent-gold)]" id="location-display">جاري التحديد...</h2>
+                </div>
+                <div class="space-y-3" id="prayer-times-list"></div>
+            </main>
+        </div>
+
+        <div id="quran-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3 mb-4">
+                    <button class="back-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <h1 class="text-xl font-bold">القرآن الكريم</h1>
+                </div>
+                <input type="text" id="surah-search" placeholder="ابحث عن سورة..." class="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 focus:border-[var(--accent-gold)] focus:outline-none">
+            </header>
+            <main class="p-4 pb-32"><div id="surah-list" class="space-y-3"></div></main>
+        </div>
+        <div id="surah-detail-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3">
+                    <button class="back-to-quran-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold" id="surah-detail-name">سورة الفاتحة</h1>
+                        <p class="text-sm text-[var(--text-secondary)]" id="surah-detail-info">مكية - 7 آيات</p>
+                    </div>
+                </div>
+            </header>
+            <main class="p-4 pb-32" id="surah-verses-container"><div class="loading-spinner"><div class="spinner"></div></div></main>
+        </div>
+
+        <div id="names-page" class="page">
+            <header class="app-header">
+                <div class="flex items-center gap-3">
+                    <button class="back-btn w-10 h-10 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <h1 class="text-xl font-bold">أسماء الله الحسنى</h1>
+                </div>
+            </header>
+            <main class="p-4 pb-32"><div id="names-grid" class="grid grid-cols-3 gap-3"></div></main>
+        </div>
+
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav">
+            <div class="flex justify-around items-center">
+                <div class="nav-item active" data-nav="home">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="text-xs">الرئيسية</span>
+                </div>
+                <div class="nav-item" data-nav="quran">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    <span class="text-xs">القرآن</span>
+                </div>
+                <div class="nav-item" data-nav="azkar">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    <span class="text-xs">الأذكار</span>
+                </div>
+                <div class="nav-item" data-nav="counter">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <span class="text-xs">السبحة</span>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Mini Player -->
+    <div id="mini-player" class="mini-player">
+        <div class="flex items-center gap-3">
+            <button id="mini-play-btn" class="w-10 h-10 rounded-full bg-[var(--accent-gold)] flex items-center justify-center">
+                <svg id="mini-play-icon" class="w-5 h-5 text-[var(--bg-primary)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg id="mini-pause-icon" class="w-5 h-5 text-[var(--bg-primary)] hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+            </button>
+            <div class="flex-1 min-w-0">
+                <p class="font-bold truncate" id="mini-surah-name">-</p>
+                <p class="text-sm text-[var(--text-secondary)] truncate" id="mini-reciter-name">-</p>
+            </div>
+            <button id="mini-close-btn" class="w-8 h-8 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="mt-2">
+            <div class="w-full bg-[var(--bg-secondary)] rounded-full h-1.5">
+                <div id="mini-progress" class="bg-gradient-to-r from-[var(--accent-gold)] to-[var(--accent-gold-light)] h-1.5 rounded-full transition-all" style="width: 0%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Banner -->
+    <div id="install-banner" class="install-banner">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl">🕌</div>
+            <div class="flex-1">
+                <h3 class="font-bold text-lg">ثبّت التطبيق</h3>
+                <p class="text-sm opacity-90">أضف نور الإسلام لشاشتك الرئيسية</p>
+            </div>
+            <button id="install-btn" class="bg-white text-green-700 font-bold px-4 py-2 rounded-xl text-sm">تثبيت</button>
+            <button id="dismiss-install-btn" class="text-white opacity-70 text-xl">&times;</button>
+        </div>
+    </div>
+
+    <!-- Quick Tasbeeh Modal -->
+    <div id="quick-tasbeeh-modal" class="modal-overlay">
+        <div class="modal-content p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="modal-tasbeeh-title">سبحان الله</h3>
+                <button id="close-modal" class="w-10 h-10 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-2xl">&times;</button>
+            </div>
+            <div class="text-center">
+                <p class="text-5xl font-bold mb-4" id="modal-counter">0</p>
+                <div class="progress-bar mb-6"><div class="progress-fill" id="modal-progress" style="width: 0%;"></div></div>
+                <button id="modal-tap-btn" class="btn-primary w-full text-xl py-4 rounded-2xl">اضغط للعد</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="quran-audio" preload="metadata"></audio>
+
+    <script>
+        // ==================== DATA ====================
+        const arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        const hijriMonths = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
+
+        const allSurahs = [
+            {number:1,name:"الفاتحة",verses:7,type:"مكية"},{number:2,name:"البقرة",verses:286,type:"مدنية"},{number:3,name:"آل عمران",verses:200,type:"مدنية"},
+            {number:4,name:"النساء",verses:176,type:"مدنية"},{number:5,name:"المائدة",verses:120,type:"مدنية"},{number:6,name:"الأنعام",verses:165,type:"مكية"},
+            {number:7,name:"الأعراف",verses:206,type:"مكية"},{number:8,name:"الأنفال",verses:75,type:"مدنية"},{number:9,name:"التوبة",verses:129,type:"مدنية"},
+            {number:10,name:"يونس",verses:109,type:"مكية"},{number:11,name:"هود",verses:123,type:"مكية"},{number:12,name:"يوسف",verses:111,type:"مكية"},
+            {number:13,name:"الرعد",verses:43,type:"مدنية"},{number:14,name:"إبراهيم",verses:52,type:"مكية"},{number:15,name:"الحجر",verses:99,type:"مكية"},
+            {number:16,name:"النحل",verses:128,type:"مكية"},{number:17,name:"الإسراء",verses:111,type:"مكية"},{number:18,name:"الكهف",verses:110,type:"مكية"},
+            {number:19,name:"مريم",verses:98,type:"مكية"},{number:20,name:"طه",verses:135,type:"مكية"},{number:21,name:"الأنبياء",verses:112,type:"مكية"},
+            {number:22,name:"الحج",verses:78,type:"مدنية"},{number:23,name:"المؤمنون",verses:118,type:"مكية"},{number:24,name:"النور",verses:64,type:"مدنية"},
+            {number:25,name:"الفرقان",verses:77,type:"مكية"},{number:26,name:"الشعراء",verses:227,type:"مكية"},{number:27,name:"النمل",verses:93,type:"مكية"},
+            {number:28,name:"القصص",verses:88,type:"مكية"},{number:29,name:"العنكبوت",verses:69,type:"مكية"},{number:30,name:"الروم",verses:60,type:"مكية"},
+            {number:31,name:"لقمان",verses:34,type:"مكية"},{number:32,name:"السجدة",verses:30,type:"مكية"},{number:33,name:"الأحزاب",verses:73,type:"مدنية"},
+            {number:34,name:"سبأ",verses:54,type:"مكية"},{number:35,name:"فاطر",verses:45,type:"مكية"},{number:36,name:"يس",verses:83,type:"مكية"},
+            {number:37,name:"الصافات",verses:182,type:"مكية"},{number:38,name:"ص",verses:88,type:"مكية"},{number:39,name:"الزمر",verses:75,type:"مكية"},
+            {number:40,name:"غافر",verses:85,type:"مكية"},{number:41,name:"فصلت",verses:54,type:"مكية"},{number:42,name:"الشورى",verses:53,type:"مكية"},
+            {number:43,name:"الزخرف",verses:89,type:"مكية"},{number:44,name:"الدخان",verses:59,type:"مكية"},{number:45,name:"الجاثية",verses:37,type:"مكية"},
+            {number:46,name:"الأحقاف",verses:35,type:"مكية"},{number:47,name:"محمد",verses:38,type:"مدنية"},{number:48,name:"الفتح",verses:29,type:"مدنية"},
+            {number:49,name:"الحجرات",verses:18,type:"مدنية"},{number:50,name:"ق",verses:45,type:"مكية"},{number:51,name:"الذاريات",verses:60,type:"مكية"},
+            {number:52,name:"الطور",verses:49,type:"مكية"},{number:53,name:"النجم",verses:62,type:"مكية"},{number:54,name:"القمر",verses:55,type:"مكية"},
+            {number:55,name:"الرحمن",verses:78,type:"مدنية"},{number:56,name:"الواقعة",verses:96,type:"مكية"},{number:57,name:"الحديد",verses:29,type:"مدنية"},
+            {number:58,name:"المجادلة",verses:22,type:"مدنية"},{number:59,name:"الحشر",verses:24,type:"مدنية"},{number:60,name:"الممتحنة",verses:13,type:"مدنية"},
+            {number:61,name:"الصف",verses:14,type:"مدنية"},{number:62,name:"الجمعة",verses:11,type:"مدنية"},{number:63,name:"المنافقون",verses:11,type:"مدنية"},
+            {number:64,name:"التغابن",verses:18,type:"مدنية"},{number:65,name:"الطلاق",verses:12,type:"مدنية"},{number:66,name:"التحريم",verses:12,type:"مدنية"},
+            {number:67,name:"الملك",verses:30,type:"مكية"},{number:68,name:"القلم",verses:52,type:"مكية"},{number:69,name:"الحاقة",verses:52,type:"مكية"},
+            {number:70,name:"المعارج",verses:44,type:"مكية"},{number:71,name:"نوح",verses:28,type:"مكية"},{number:72,name:"الجن",verses:28,type:"مكية"},
+            {number:73,name:"المزمل",verses:20,type:"مكية"},{number:74,name:"المدثر",verses:56,type:"مكية"},{number:75,name:"القيامة",verses:40,type:"مكية"},
+            {number:76,name:"الإنسان",verses:31,type:"مدنية"},{number:77,name:"المرسلات",verses:50,type:"مكية"},{number:78,name:"النبأ",verses:40,type:"مكية"},
+            {number:79,name:"النازعات",verses:46,type:"مكية"},{number:80,name:"عبس",verses:42,type:"مكية"},{number:81,name:"التكوير",verses:29,type:"مكية"},
+            {number:82,name:"الانفطار",verses:19,type:"مكية"},{number:83,name:"المطففين",verses:36,type:"مكية"},{number:84,name:"الانشقاق",verses:25,type:"مكية"},
+            {number:85,name:"البروج",verses:22,type:"مكية"},{number:86,name:"الطارق",verses:17,type:"مكية"},{number:87,name:"الأعلى",verses:19,type:"مكية"},
+            {number:88,name:"الغاشية",verses:26,type:"مكية"},{number:89,name:"الفجر",verses:30,type:"مكية"},{number:90,name:"البلد",verses:20,type:"مكية"},
+            {number:91,name:"الشمس",verses:15,type:"مكية"},{number:92,name:"الليل",verses:21,type:"مكية"},{number:93,name:"الضحى",verses:11,type:"مكية"},
+            {number:94,name:"الشرح",verses:8,type:"مكية"},{number:95,name:"التين",verses:8,type:"مكية"},{number:96,name:"العلق",verses:19,type:"مكية"},
+            {number:97,name:"القدر",verses:5,type:"مكية"},{number:98,name:"البينة",verses:8,type:"مدنية"},{number:99,name:"الزلزلة",verses:8,type:"مدنية"},
+            {number:100,name:"العاديات",verses:11,type:"مكية"},{number:101,name:"القارعة",verses:11,type:"مكية"},{number:102,name:"التكاثر",verses:8,type:"مكية"},
+            {number:103,name:"العصر",verses:3,type:"مكية"},{number:104,name:"الهمزة",verses:9,type:"مكية"},{number:105,name:"الفيل",verses:5,type:"مكية"},
+            {number:106,name:"قريش",verses:4,type:"مكية"},{number:107,name:"الماعون",verses:7,type:"مكية"},{number:108,name:"الكوثر",verses:3,type:"مكية"},
+            {number:109,name:"الكافرون",verses:6,type:"مكية"},{number:110,name:"النصر",verses:3,type:"مدنية"},{number:111,name:"المسد",verses:5,type:"مكية"},
+            {number:112,name:"الإخلاص",verses:4,type:"مكية"},{number:113,name:"الفلق",verses:5,type:"مكية"},{number:114,name:"الناس",verses:6,type:"مكية"}
+        ];
+
+        const namesOfAllah = ["الله", "الرحمن", "الرحيم", "الملك", "القدوس", "السلام", "المؤمن", "المهيمن", "العزيز", "الجبار", "المتكبر", "الخالق", "البارئ", "المصور", "الغفار", "القهار", "الواهاب", "الرزاق", "الفتاح", "العليم", "القابض", "الباسط", "الخافض", "الرافع", "المعز", "المذل", "السميع", "البصير", "الحكم", "العدل", "اللطيف", "الخبير", "الحليم", "العظيم", "الغفور", "الشكور", "العلي", "الكبير", "الحفيظ", "المقيت", "الحسيب", "الجليل", "الكريم", "الرقيب", "المجيب", "الواسع", "الحكيم", "الودود", "المجيد", "الباعث", "الشهيد", "الحق", "الوكيل", "القوي", "المتين", "الولي", "الحميد", "المحصي", "المبدئ", "المعيد", "المحيي", "المميت", "الحي", "القيوم", "الواجد", "الماجد", "الواحد", "الصمد", "القادر", "المقتدر", "المقدم", "المؤخر", "الأول", "الآخر", "الظاهر", "الباطن", "الوالي", "المتعالي", "البر", "التواب", "المنتقم", "العفو", "الرؤوف", "مالك الملك", "ذو الجلال والإكرام", "المقسط", "الجامع", "الغني", "المغني", "المانع", "الضار", "النافع", "النور", "الهادي", "البديع", "الباقي", "الوارث", "الرشيد", "الصبور"];
+
+        // Reciters for General Recitations
+        const shuyukh = [
+            { name: "مشاري العفاسي", server: "https://server8.mp3quran.net/afs/" },
+            { name: "سعود الشريم", server: "https://server7.mp3quran.net/shur/" },
+            { name: "عبد الرحمن السديس", server: "https://server11.mp3quran.net/sds/" },
+            { name: "ماهر المعيقلي", server: "https://server12.mp3quran.net/maher/" },
+            { name: "أحمد العجمي", server: "https://server10.mp3quran.net/ajm/" },
+            { name: "ناصر القطامي", server: "https://server6.mp3quran.net/qtm/" },
+            { name: "خالد الجليل", server: "https://server10.mp3quran.net/jleel/" },
+            { name: "فارس عباد", server: "https://server8.mp3quran.net/frs_a/" }
+        ];
+
+        // NEW: Teachers for Tajweed Learning (Mujawwad/Teaching style)
+        const tajweedTeachers = [
+            { name: "محمود خليل الحصري (مجود)", server: "https://server13.mp3quran.net/husr/" }, // Famous for Tajweed teaching
+            { name: "محمد صديق المنشاوي (مجود)", server: "https://server10.mp3quran.net/minsh_m/" }, // Minshawi Mujawwad
+            { name: "عبد الباسط عبد الصمد (مجود)", server: "https://server7.mp3quran.net/basit/" }, // Basit Mujawwad
+            { name: "عبدالله بصفر", server: "https://server11.mp3quran.net/basfar/" } // Known for clear teaching style
+        ];
+
+        // Azkar Data
+        const azkarData = {
+            morning: [
+                {text:"أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ...",count:1},
+                {text:"اللَّهُمَّ بِكَ أَصْبَحْنَا...",count:1},
+                {text:"اللَّهُمَّ أَنْتَ رَبِّي لا إِلَـهَ إِلاَّ أَنْتَ...",count:1},
+                {text:"سُبْحَانَ اللهِ وَبِحَمْدِهِ",count:100},
+            ],
+            evening: [
+                {text:"أَمْسَيْنَا وَأَمْسَى الْمُلْكُ للهِ...",count:1},
+                {text:"سُبْحَانَ اللهِ وَبِحَمْدِهِ",count:100}
+            ],
+            sleep: [
+                {text:"بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا",count:1},
+                {text:"اللَّهُمَّ قِنِي عَذَابَكَ...",count:3},
+            ],
+            daily: [
+                {text:"أَعُوذُ بِكَلِمَاتِ اللهِ التَّامَّاتِ...",count:3},
+                {text:"بِسْمِ اللهِ الَّذِي لا يَضُرُّ...",count:3},
+            ],
+            occasions: [
+                {text:"اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ...", info: "دعاء الهم والحزن", count:1},
+                {text:"رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً...", info: "دعاء شامل", count:3},
+                {text:"سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا...", info: "دعاء ركوب المركب", count:1},
+            ]
+        };
+
+        // Dhikr list for Counter
+        const dhikrList = [
+            {text:"سُبْحَانَ الله", count:33}, {text:"الْحَمْدُ لله", count:33}, {text:"اللهُ أَكْبَر", count:34},
+            {text:"لَا إِلَهَ إِلَّا الله", count:100}, {text:"أَسْتَغْفِرُ الله", count:100}, {text:"سُبْحَانَ اللهِ وَبِحَمْدِهِ", count:100},
+        ];
+
+        // UPDATED: Prophet Stories (Detailed & Explained)
+        const prophetsStories = [
+            { id: 1, name: "آدم عليه السلام", title: "أبو البشرية", icon: "🧍", summary: "تعليم التوبة والاستغفار", order: 1, story: "خُلق آدم من طين ثم نفخ الله فيه من روحه، وأسكنه الجنة. عرض الله عليه وعلى ذريته الأمانات فحملها. تعلم من آدم أن الخطأ ليس نهاية المطاف، فعندما عصى ربه تاب فتاب الله عليه، فكانت أول توبة في البشرية. الدرس: باب التوبة مفتوح لا يُغلق، والله يحب التوابين." },
+            { id: 2, name: "إدريس عليه السلام", title: "أول من خط بالقلم", icon: "✍️", summary: "رفعه الله مكاناً علياً", order: 2, story: "كان إدريس أول بني آدم أعطي النبوة بعد آدم وشيث. كان خياطاً فكان يسبح الله بكل غرزة إبرة، فرفعه الله مكاناً علياً. الدرس: الاشتغال بذكر الله أثناء العمل يرفع الدرجة." },
+            { id: 3, name: "نوح عليه السلام", title: "أول الرسل أولي العزم", icon: "🚢", summary: "صبر 950 سنة", order: 3, story: "لبث نوح في قومه 950 سنة يدعوهم وهم يكذبونه ويضربونه حتى كان يغمى عليه، وكان يوكل الله من يWakeه. أمره الله ببناء السفينة في صحراء فسخروا منه، فنجا ومن معه. الدرس: الصبر مفتاح الفرج، والدعوة تحتاج صبراً طويلاً." },
+            { id: 4, name: "هود عليه السلام", title: "نبي عاد", icon: "💨", summary: "شكر النعم", order: 4, story: "أرسل إلى قوم عاد الذين جعلهم الله أشداء ذوي قوة، فكفروا وتكبروا. سخر لهم الله الريح العقيم فأهلكتهم. الدرس: القوة والثراء ليس دليلاً على رضا الله، والشكر واجب على النعم." },
+            { id: 5, name: "صالح عليه السلام", title: "نبي ثمود", icon: "🐪", summary: "ناقة الله", order: 5, story: "سأل قومه آية فأخرج الله لهم الناقة من الصخر، وشربت ماءهم يوماً ويوماً لهم، فطلبوا منها أن تشرب وتدر لهم لبناً. عقروها فأخذتهم الصيحة. الدرس: نقض العهد مع الله يورد المهالك." },
+            { id: 6, name: "إبراهيم عليه السلام", title: "أبو الأنبياء", icon: "⭐", summary: "التوحيد الخالص", order: 6, story: "حطم الأصنام فألقي في النار فكانت برداً وسلاماً. ابتلي بذبح ابنه فاستسلما لأمر الله فداه الله بذبح عظيم. الدرس: التسليم المطلق لأمر الله سبب للنجاة والراحة." },
+            { id: 7, name: "إسماعيل عليه السلام", title: "ذبيح الله", icon: "🌙", summary: "الطاعة المطلقة", order: 7, story: "رأى أبوه في المنام أنه يذبحه، فقال: يا أبتِ افعل ما تؤمر ستجدني إن شاء الله من الصابرين. الدرس: بر الوالدين وطاعة الله مقدمة على كل شيء." },
+            { id: 8, name: "لوط عليه السلام", title: "نبي سدوم", icon: "🏠", summary: "النجاة من العذاب", order: 8, story: "نهاهم عن الفاحشة فأبوا، فأمطرت السماء حجارة من سجيل. الدرس: الفاحشة سبب هلاك الأمم." },
+            { id: 9, name: "يعقوب عليه السلام", title: "إسرائيل", icon: "🦁", summary: "الصبر على فقد الأحبة", order: 10, story: "حسد إخوته يوسف فألقوه في الجب، ففقد يوسف وبكى حتى ابيضت عيناه، ثم جاءه فرج ربه برد يوسف. الدرس: الصبر الجميل يورث الفرج، وأن الله يجمع الشمل بعد التفرق." },
+            { id: 10, name: "يوسف عليه السلام", title: "سيد التمكين", icon: "👑", summary: "العفو عند المقدرة", order: 11, story: "حسده إخوته فألقوه في الجب، ثم بيع عبداً في مصر. همت به امرأة العزيز فسجن ظلماً. مكنه الله في الأرض مكاناً علياً، فلما جاءه إخوته عفا عنهم وقال: لا تثريب عليكم اليوم. الدرس: من اتقى الله جعل له مخرجاً وارزقه من حيث لا يحتسب." },
+            { id: 11, name: "شعيب عليه السلام", title: "خطيب الأنبياء", icon: "⚖️", summary: "العدل في المكيال", order: 12, story: "نهاهم عن نقص الكيل والميزان فأخذتهم رجفة. الدرس: التطفيف سبب هلاك الأمم." },
+            { id: 12, name: "أيوب عليه السلام", title: "نبي الصبر", icon: "🌿", summary: "الصبر على البلاء", order: 13, story: "ابتلاه الله في ماله وولده وجسده 18 سنة، فما قال إلا: إني مسني الضر وأنت أرحم الراحمين، فشفاه الله. الدرس: الصبر على البلاء عبادة عظيمة لها أجر كبير." },
+            { id: 13, name: "موسى عليه السلام", title: "كليم الله", icon: "🔥", summary: "التوكل والقوة", order: 15, story: "كلمه الله تجلياً، وجعل آيته العصا واليد، فقهر فرعون وشق البحر. كان قوياً في الحق لا يخاف لومة لائم. الدرس: الحق أحق أن يتبع، ومع العسر يسرا." },
+            { id: 14, name: "داود عليه السلام", title: "صاحب الزبور", icon: "⚔️", summary: "الشكر والقوة", order: 20, story: "أعطاه الله ملكاً عظيماً وقوة في العبادة، كان يصوم يوماً ويفطر يوماً، ويقرأ الزبور بصوت جميل فسبحت الجبال معه. الدرس: شكر النعم يكون بالعبادة والعمل الصالح." },
+            { id: 15, name: "سليمان عليه السلام", title: "نبي الملك", icon: "👑", summary: "الشكر على النعم", order: 21, story: "سخر الله له الجن والإنس والطير والريح. دعا ربه فقال: رب أوزعني أن أشكر نعمتك. الدرس: الملك الحقيقي هو ملك النفس وشكر المولى." },
+            { id: 16, name: "يونس عليه السلام", title: "ذا النون", icon: "🐋", summary: "التوبة السريعة", order: 19, story: "ذهب مغاضباً فابتلعه الحوت، فنادى في الظلمات: لا إله إلا أنت سبحانك إني كنت من الظالمين، فنجاه الله. الدرس: لا تيأس من روح الله، وباب التوبة مفتوح." },
+            { id: 17, name: "زكريا عليه السلام", title: "نبي بني إسرائيل", icon: "🕯️", summary: "دعاء الذرية", order: 22, story: "كبر سنه وضعف عظمه ولم يكن له ولد، فنادى ربه نداء خفياً، فبشره بيحيى. الدرس: الله يجيب المضطر إذا دعاه." },
+            { id: 18, name: "يحيى عليه السلام", title: "سيد وحصور", icon: "💧", summary: "الزهد في الدنيا", order: 23, story: "كان يأكل الجذب ويشرب الماء ويلبس الشعر، وكان لا يملك شيئاً من الدنيا. الدرس: الزهد في الدنيا ربح عظيم." },
+            { id: 19, name: "عيسى عليه السلام", title: "روح الله", icon: "✝️", summary: "آيات بينات", order: 24, story: "ولد من غير أب، وتكلم في المهد، وأبرأ الأكمه والأبرص بإذن الله، ورفعه الله إليه. الدرس: قدرة الله لا حدود لها، وهو على كل شيء قدير." },
+            { id: 20, name: "محمد ﷺ", title: "خاتم النبيين", icon: "🌙", summary: "الرحمة والخلق العظيم", order: 25, story: "بعث والناس في ضلال مبين، فهدى الله به الأمم. كان خلقه القرآن، ما ترك خيراً إلا ودل أمته عليه. الدرس: الرحمة بالخلق ودعوتهم بالحكمة والموعظة الحسنة." }
+        ];
+
+        // Tajweed Rules Content
+        const tajweedRules = [
+            { title: "أحكام النون الساكنة", content: "الإظهار (من خير)، الإدغام (من ولي)، الإقلاب (من بعد)، الإخفاء (من خلق)." },
+            { title: "المدود", content: "المد الطبيعي (حركتان)، المد الفرعي (متصل، منفصل، عارض، لاز)." },
+            { title: "أحكام الراء", content: "التفخيم (مرٌ)، الترقيق (رِ)، الترقيق (قرآن)." },
+        ];
+
+        // State
+        let currentCounterValue = 0, currentTarget = 33;
+        let currentDhikrIndex = 0;
+        let modalCounter = 0, modalTarget = 33;
+        let versesCache = {};
+        let prayerTimesData = [];
+        const quranAudio = document.getElementById('quran-audio');
+        const quranAudioRecitation = document.getElementById('quran-audio-recitation');
+        const tajweedAudioPlayer = document.getElementById('tajweed-audio-player');
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            initStars();
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            renderSurahs();
+            renderAzkar('morning');
+            renderNames();
+            renderProphets();
+            renderTajweed();
+            renderDhikrList();
+            initEvents();
+            fetchPrayerTimes();
+            initInstallBanner();
+            initRecitations();
+            initTajweedAudio(); // NEW Init
+        });
+
+        // ==================== PWA INSTALL ====================
+        let deferredPrompt;
+        function initInstallBanner() {
+            window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+            setTimeout(() => { if(!window.matchMedia('(display-mode: standalone)').matches) document.getElementById('install-banner').classList.add('active'); }, 2000);
+            document.getElementById('install-btn').addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; } document.getElementById('install-banner').classList.remove('active'); });
+            document.getElementById('dismiss-install-btn').addEventListener('click', () => { document.getElementById('install-banner').classList.remove('active'); });
+        }
+
+        // ==================== HELPERS ====================
+        function initStars() { const c = document.getElementById('stars-container'); if(!c) return; for(let i=0; i<50; i++) { const s = document.createElement('div'); s.className = 'star'; s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%'; s.style.animationDelay = Math.random()*3+'s'; c.appendChild(s); } }
+        function updateDateTime() { const now = new Date(); let hours = now.getHours(); const minutes = now.getMinutes().toString().padStart(2, '0'); const period = hours >= 12 ? 'م' : 'ص'; hours = hours % 12 || 12; document.getElementById('current-time').textContent = `${hours.toString().padStart(2, '0')}:${minutes}`; document.getElementById('time-period').textContent = period; document.getElementById('current-day').textContent = arabicDays[now.getDay()]; document.getElementById('gregorian-date').textContent = `${now.getDate()} ${arabicMonths[now.getMonth()]}`; const hijri = gregorianToHijri(now); document.getElementById('hijri-date').textContent = `${hijri.day} ${hijriMonths[hijri.month - 1]} ${hijri.year}`; updateNextPrayerUI(now); }
+        function gregorianToHijri(date) { const jd = Math.floor((date.getTime() / 86400000) + 2440587.5); const l = jd - 1948440 + 10632; const n = Math.floor((l - 1) / 10631); const l2 = l - 10631 * n + 354; const j = Math.floor((10985 - l2) / 5316) * Math.floor((50 * l2) / 17719) + Math.floor(l2 / 5670) * Math.floor((43 * l2) / 15238); const l3 = l2 - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29; return { year: 30 * n + j - 30, month: Math.floor((24 * l3) / 709), day: l3 - Math.floor((709 * Math.floor((24 * l3) / 709)) / 24) }; }
+
+        // ==================== PRAYER TIMES ====================
+        function fetchPrayerTimes() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(position => { getPrayerTimes(position.coords.latitude, position.coords.longitude); }, () => { getPrayerTimes(30.0444, 31.2357); }); } else { getPrayerTimes(30.0444, 31.2357); } }
+        function getPrayerTimes(lat, long) { const today = new Date(); const date = `${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}`; fetch(`https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${long}&method=5`).then(res => res.json()).then(data => { if(data.code === 200) { prayerTimesData = [ { name: "الفجر", time: data.data.timings.Fajr }, { name: "الشروق", time: data.data.timings.Sunrise }, { name: "الظهر", time: data.data.timings.Dhuhr }, { name: "العصر", time: data.data.timings.Asr }, { name: "المغرب", time: data.data.timings.Maghrib }, { name: "العشاء", time: data.data.timings.Isha } ]; renderPrayerTimes(); updateNextPrayerUI(new Date()); document.getElementById('location-display').textContent = "تم تحديد الموقع"; } }).catch(err => console.error('Error:', err)); }
+        function updateNextPrayerUI(now) { if (!prayerTimesData || prayerTimesData.length === 0) return; const cm = now.getHours()*60+now.getMinutes(); let np = prayerTimesData[0]; for(let p of prayerTimesData) { const parts = p.time.split(':'); if(parseInt(parts[0])*60+parseInt(parts[1]) > cm) { np = p; break; } } document.getElementById('next-prayer-name').textContent = np.name; document.getElementById('next-prayer-time').textContent = np.time; }
+        function renderPrayerTimes() { const now = new Date(); const cm = now.getHours()*60+now.getMinutes(); const container = document.getElementById('prayer-times-list'); container.innerHTML = prayerTimesData.map((p, i) => { const parts = p.time.split(':'); const t = parseInt(parts[0])*60+parseInt(parts[1]); let active = false; if(i>0) { const prev = prayerTimesData[i-1].time.split(':'); const pt = parseInt(prev[0])*60+parseInt(prev[1]); if(cm >= pt && cm < t) active = true; } else if(cm < t) active = true; return `<div class="prayer-time-item ${active ? 'active' : ''}"><div class="flex items-center gap-3"><div class="prayer-dot"></div><span class="text-lg">${p.name}</span></div><span class="text-xl font-bold">${p.time}</span></div>`; }).join(''); }
+
+        // ==================== RECITATIONS ====================
+        function initRecitations() {
+            const rs = document.getElementById('reciter-select');
+            shuyukh.forEach((s, i) => rs.innerHTML += `<option value="${i}">${s.name}</option>`);
+            const ss = document.getElementById('surah-select-recitation');
+            allSurahs.forEach(s => ss.innerHTML += `<option value="${String(s.number).padStart(3,'0')}">${s.number}. ${s.name}</option>`);
+            rs.onchange = ss.onchange = loadRecitationAudio;
+        }
+
+        function loadRecitationAudio() {
+            const ri = document.getElementById('reciter-select').value;
+            const sn = document.getElementById('surah-select-recitation').value;
+            if(!ri || !sn) return;
+            const reciter = shuyukh[ri];
+            quranAudioRecitation.src = `${reciter.server}${sn}.mp3`;
+            document.getElementById('player-reciter-name').textContent = reciter.name;
+            document.getElementById('player-surah-name').textContent = document.getElementById('surah-select-recitation').selectedOptions[0].text;
+            document.getElementById('audio-controls').classList.remove('hidden');
+            document.getElementById('mini-player').classList.add('active');
+            document.getElementById('mini-reciter-name').textContent = reciter.name;
+            document.getElementById('mini-surah-name').textContent = document.getElementById('surah-select-recitation').selectedOptions[0].text;
+            if (!quranAudio.paused) quranAudio.pause();
+            if (!tajweedAudioPlayer.paused) tajweedAudioPlayer.pause();
+            quranAudioRecitation.play().catch(()=>{});
+        }
+        
+        document.getElementById('play-pause-btn')?.addEventListener('click', () => quranAudioRecitation.paused ? quranAudioRecitation.play() : quranAudioRecitation.pause());
+        document.getElementById('rewind-btn')?.addEventListener('click', () => quranAudioRecitation.currentTime = Math.max(0, quranAudioRecitation.currentTime - 10));
+        document.getElementById('forward-btn')?.addEventListener('click', () => quranAudioRecitation.currentTime = Math.min(quranAudioRecitation.duration||0, quranAudioRecitation.currentTime + 10));
+        
+        quranAudioRecitation.addEventListener('play', () => { document.getElementById('play-icon-main').classList.add('hidden'); document.getElementById('pause-icon-main').classList.remove('hidden'); document.getElementById('mini-play-icon').classList.add('hidden'); document.getElementById('mini-pause-icon').classList.remove('hidden'); });
+        quranAudioRecitation.addEventListener('pause', () => { document.getElementById('play-icon-main').classList.remove('hidden'); document.getElementById('pause-icon-main').classList.add('hidden'); document.getElementById('mini-play-icon').classList.remove('hidden'); document.getElementById('mini-pause-icon').classList.add('hidden'); });
+        quranAudioRecitation.addEventListener('timeupdate', () => { if(quranAudioRecitation.duration) { const p = (quranAudioRecitation.currentTime/quranAudioRecitation.duration)*100; document.getElementById('progress-bar').style.width = p+'%'; document.getElementById('mini-progress').style.width = p+'%'; } });
+
+        // ==================== NEW: Audio Tajweed ====================
+        function initTajweedAudio() {
+            const ts = document.getElementById('tajweed-teacher-select');
+            tajweedTeachers.forEach((t, i) => ts.innerHTML += `<option value="${i}">${t.name}</option>`);
+            const ss = document.getElementById('surah-select-tajweed');
+            allSurahs.forEach(s => ss.innerHTML += `<option value="${String(s.number).padStart(3,'0')}">${s.number}. ${s.name}</option>`);
+            ts.onchange = ss.onchange = loadTajweedAudio;
+            
+            document.getElementById('tajweed-play-pause').onclick = () => tajweedAudioPlayer.paused ? tajweedAudioPlayer.play() : tajweedAudioPlayer.pause();
+            document.getElementById('tajweed-rewind').onclick = () => tajweedAudioPlayer.currentTime = Math.max(0, tajweedAudioPlayer.currentTime - 10);
+            document.getElementById('tajweed-forward').onclick = () => tajweedAudioPlayer.currentTime = Math.min(tajweedAudioPlayer.duration||0, tajweedAudioPlayer.currentTime + 10);
+            
+            tajweedAudioPlayer.onplay = () => { document.getElementById('tajweed-play-icon').classList.add('hidden'); document.getElementById('tajweed-pause-icon').classList.remove('hidden'); document.getElementById('tajweed-audio-controls').classList.remove('hidden'); activateMiniPlayer('tajweed'); };
+            tajweedAudioPlayer.onpause = () => { document.getElementById('tajweed-play-icon').classList.remove('hidden'); document.getElementById('tajweed-pause-icon').classList.add('hidden'); };
+            tajweedAudioPlayer.ontimeupdate = () => { if(tajweedAudioPlayer.duration) document.getElementById('tajweed-progress-bar').style.width = (tajweedAudioPlayer.currentTime/tajweedAudioPlayer.duration)*100 + '%'; };
+        }
+
+        function loadTajweedAudio() {
+            const ti = document.getElementById('tajweed-teacher-select').value;
+            const sn = document.getElementById('surah-select-tajweed').value;
+            if(!ti || !sn) return;
+            const teacher = tajweedTeachers[ti];
+            tajweedAudioPlayer.src = `${teacher.server}${sn}.mp3`;
+            document.getElementById('tajweed-player-reciter').textContent = teacher.name;
+            document.getElementById('tajweed-player-surah').textContent = document.getElementById('surah-select-tajweed').selectedOptions[0].text;
+            if (!quranAudioRecitation.paused) quranAudioRecitation.pause();
+            tajweedAudioPlayer.play().catch(()=>{});
+        }
+
+        function activateMiniPlayer(type) {
+            const player = document.getElementById('mini-player');
+            player.classList.add('active');
+            if(type === 'tajweed') {
+                document.getElementById('mini-surah-name').textContent = document.getElementById('tajweed-player-surah').textContent;
+                document.getElementById('mini-reciter-name').textContent = document.getElementById('tajweed-player-reciter').textContent;
+            }
+        }
+
+        // Mini Player Global Controls
+        document.getElementById('mini-play-btn').onclick = () => { if (!quranAudioRecitation.paused) quranAudioRecitation.paused ? quranAudioRecitation.play() : quranAudioRecitation.pause(); else if (!tajweedAudioPlayer.paused) tajweedAudioPlayer.paused ? tajweedAudioPlayer.play() : tajweedAudioPlayer.pause(); };
+        document.getElementById('mini-close-btn').onclick = () => { quranAudio.pause(); quranAudioRecitation.pause(); tajweedAudioPlayer.pause(); document.getElementById('mini-player').classList.remove('active'); };
+
+        // ==================== TAJWEED RULES RENDER ====================
+        function renderTajweed() {
+            const container = document.getElementById('tajweed-content');
+            container.innerHTML = tajweedRules.map((r, i) => `<div class="content-card stagger-item" style="animation-delay:${i*0.05}s"><h3 class="text-lg font-bold text-[var(--accent-gold)] mb-3">${r.title}</h3><p class="text-[var(--text-secondary)] leading-relaxed">${r.content}</p></div>`).join('');
+        }
+
+        // ==================== RENDERS ====================
+        function renderSurahs(filter = '') { const container = document.getElementById('surah-list'); const filtered = allSurahs.filter(s => s.name.includes(filter) || s.number.toString().includes(filter)); container.innerHTML = filtered.map((s, i) => `<div class="surah-item stagger-item" style="animation-delay:${i*0.02}s" onclick="openSurah(${s.number})"><div class="surah-number">${s.number}</div><div class="flex-1"><h4 class="font-bold">${s.name}</h4><p class="text-[var(--text-secondary)] text-sm">${s.type} - ${s.verses} آيات</p></div></div>`).join(''); }
+        function openSurah(num) { showPage('surah-detail-page'); loadVerses(num); }
+        function loadVerses(num) { const container = document.getElementById('surah-verses-container'); const surahInfo = allSurahs.find(s => s.number === num); document.getElementById('surah-detail-name').textContent = 'سورة ' + surahInfo.name; document.getElementById('surah-detail-info').textContent = surahInfo.type + ' - ' + surahInfo.verses + ' آيات'; container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>'; if(versesCache[num]) { displayVerses(versesCache[num], num); return; } fetch(`https://api.alquran.cloud/v1/surah/${num}`).then(res => res.json()).then(data => { versesCache[num] = data.data; displayVerses(data.data, num); }).catch(() => { container.innerHTML = '<div class="text-center py-8"><p class="text-red-400">حدث خطأ</p></div>'; }); }
+        function displayVerses(data, num) { const container = document.getElementById('surah-verses-container'); container.innerHTML = ''; if(num !== 9 && num !== 1) container.innerHTML += '<div class="bismillah font-amiri">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>'; data.ayahs.forEach((a, i) => { let txt = a.text; if(i === 0 && num !== 9 && num !== 1 && txt.startsWith('بِسْمِ اللَّهِ')) txt = txt.substring(38).trim(); if(txt) container.innerHTML += `<div class="verse-container"><p class="verse-text font-amiri">${txt} <span class="verse-number">${a.numberInSurah}</span></p></div>`; }); }
+        function renderNames() { document.getElementById('names-grid').innerHTML = namesOfAllah.map((n, i) => `<div class="name-card stagger-item" style="animation-delay:${i*0.01}s"><p class="name-text">${n}</p></div>`).join(''); }
+        function renderAzkar(type) { const data = azkarData[type] || []; document.getElementById('azkar-content').innerHTML = data.map((z, i) => `<div class="content-card stagger-item">${z.info ? `<p class="text-xs text-[var(--accent-gold)] mb-2 italic">${z.info}</p>` : ''}<p class="font-amiri text-lg mb-4 leading-relaxed">${z.text}</p><div class="flex justify-between items-center"><span class="text-[var(--text-secondary)]">العدد: ${z.count}</span><button class="btn-secondary text-sm py-2 px-4" onclick="openQuickTasbeeh('${z.text.replace(/'/g, "\\'")}', ${z.count})">عد</button></div></div>`).join(''); }
+        
+        // Prophets Render
+        function renderProphets() { const container = document.getElementById('prophets-list'); container.innerHTML = ''; const sorted = [...prophetsStories].sort((a, b) => a.order - b.order); sorted.forEach((prophet, i) => { const div = document.createElement('div'); div.className = 'story-card stagger-item'; div.style.animationDelay = `${i*0.05}s`; div.innerHTML = `<div class="story-header"><div class="story-icon">${prophet.icon}</div><div class="flex-1"><h3 class="font-bold text-lg">${prophet.name}</h3><p class="text-[var(--accent-gold)] text-sm">${prophet.title}</p></div></div><p class="text-[var(--text-secondary)] text-sm">${prophet.summary}</p>`; div.onclick = () => openProphetStory(prophet.id); container.appendChild(div); }); }
+        function openProphetStory(id) { const prophet = prophetsStories.find(p => p.id === id); showPage('prophet-detail-page'); document.getElementById('prophet-detail-name').textContent = prophet.name; document.getElementById('prophet-detail-content').innerHTML = `<div class="content-card text-center"><div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[var(--accent-gold)] to-[var(--accent-gold-light)] flex items-center justify-center text-3xl mb-4">${prophet.icon}</div><h2 class="text-lg font-bold text-[var(--accent-gold)] mb-2">${prophet.title}</h2><p class="text-[var(--text-secondary)] mb-4">الترتيب: ${prophet.order} من 25</p><p class="font-amiri text-lg leading-relaxed text-right">${prophet.story}</p></div>`; }
+        
+        function renderDhikrList() { const container = document.getElementById('dhikr-list'); container.innerHTML = dhikrList.map((d, i) => `<div class="dhikr-item ${i === 0 ? 'active' : ''}" data-index="${i}"><p class="font-bold text-sm">${d.text}</p><p class="text-xs text-[var(--text-secondary)]">العدد: ${d.count}</p></div>`).join(''); container.querySelectorAll('.dhikr-item').forEach(item => { item.onclick = function() { container.querySelectorAll('.dhikr-item').forEach(x => x.classList.remove('active')); this.classList.add('active'); currentDhikrIndex = parseInt(this.dataset.index); selectDhikr(currentDhikrIndex); }; }); selectDhikr(0); }
+        function selectDhikr(index) { const dhikr = dhikrList[index]; document.getElementById('tasbeeh-text').textContent = dhikr.text; document.getElementById('target-input').value = dhikr.count; resetCounter(); }
+
+        // Events
+        function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function initEvents() {
+            document.querySelectorAll('.section-card').forEach(c => c.onclick = function() { showPage(this.dataset.section + '-page'); });
+            document.querySelectorAll('.nav-item').forEach(n => n.onclick = function() { showPage(this.dataset.nav + '-page'); });
+            document.querySelectorAll('.back-btn').forEach(b => b.onclick = () => showPage('home-page'));
+            document.querySelector('.back-to-quran-btn').onclick = () => showPage('quran-page');
+            document.querySelector('.back-to-prophets-btn').onclick = () => showPage('prophets-page');
+            document.getElementById('surah-search').oninput = function() { renderSurahs(this.value); };
+            
+            document.querySelectorAll('#azkar-page .tajweed-tab').forEach(t => t.onclick = function() { document.querySelectorAll('#azkar-page .tajweed-tab').forEach(x => x.classList.remove('active')); this.classList.add('active'); renderAzkar(this.dataset.tab); });
+
+            document.getElementById('counter-btn').addEventListener('click', () => { if(currentCounterValue < currentTarget) { currentCounterValue++; updateCounterUI(); if(navigator.vibrate) navigator.vibrate(20); } });
+            document.getElementById('target-input').onchange = updateTargetUI;
+
+            document.getElementById('close-modal').onclick = closeQuickTasbeeh;
+            document.getElementById('modal-tap-btn').onclick = () => { if(modalCounter<modalTarget){ modalCounter++; document.getElementById('modal-counter').textContent=modalCounter; document.getElementById('modal-progress').style.width=(modalCounter/modalTarget)*100+'%'; if(navigator.vibrate)navigator.vibrate(20); } };
+            document.getElementById('quick-tasbeeh-modal').onclick = e => { if(e.target===document.getElementById('quick-tasbeeh-modal')) closeQuickTasbeeh(); };
+        }
+
+        // Counter Logic
+        function updateCounterUI() { document.getElementById('counter-value').textContent = currentCounterValue; const progress = (currentCounterValue / currentTarget) * 100; document.getElementById('counter-ring').style.setProperty('--progress', progress + '%'); }
+        function resetCounter() { currentCounterValue = 0; currentTarget = parseInt(document.getElementById('target-input').value) || 33; updateTargetUI(); updateCounterUI(); }
+        function adjustTarget(amount) { let input = document.getElementById('target-input'); let val = parseInt(input.value) || 33; val = Math.max(1, val + amount); input.value = val; updateTargetUI(); }
+        function updateTargetUI() { currentTarget = parseInt(document.getElementById('target-input').value) || 33; document.getElementById('target-count').textContent = currentTarget; if(currentCounterValue > currentTarget) resetCounter(); }
+        function openQuickTasbeeh(text, target) { modalCounter = 0; modalTarget = target; document.getElementById('quick-tasbeeh-modal').classList.add('active'); document.getElementById('modal-tasbeeh-title').textContent = text; document.getElementById('modal-counter').textContent = '0'; document.getElementById('modal-progress').style.width = '0%'; }
+        function closeQuickTasbeeh() { document.getElementById('quick-tasbeeh-modal').classList.remove('active'); }
+    </script>
+</body> 
+</html>
